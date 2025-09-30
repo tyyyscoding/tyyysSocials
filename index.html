@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tyler Watson | Links</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Poppins", sans-serif;
+        overflow: hidden;
+        background: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #fff;
+      }
+
+      canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+
+      .container {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+      }
+
+      .logo {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        border: 5px solid #f3764b;
+        box-shadow: 0 0 20px #f3764b50, 0 0 50px #ee992250;
+        object-fit: cover;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: default;
+      }
+
+      .logo:hover {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 0 25px #f3764b80, 0 0 60px #ee992280;
+      }
+
+      .links {
+        display: flex;
+        flex-direction: row; /* horizontal layout */
+        gap: 20px; /* spacing between buttons */
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap; /* wrap to next line on smaller screens */
+      }
+
+      .links a {
+        position: relative;
+        text-decoration: none;
+        color: #fff;
+        padding: 12px 30px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.4s ease;
+        background: linear-gradient(45deg, #f3764b, #ee9922);
+        background-size: 200% 200%;
+        box-shadow: 0 0 15px #f3764b50;
+      }
+
+      .links a:hover {
+        animation: gradientShift 3s infinite alternate;
+        box-shadow: 0 0 25px #ee992280;
+        transform: scale(1.05);
+      }
+
+      /* Gradient animation keyframes */
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .cursor {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        border: 2px solid #f3764b;
+        pointer-events: none;
+        transform: translate(-50%, -50%);
+        transition: transform 0.05s ease-out, background 0.2s;
+        z-index: 20;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bgCanvas"></canvas>
+
+    <div class="container">
+      <img src="image.png" alt="Tyler Watson Logo" class="logo" />
+      <div class="links">
+        <a href="https://twitch.tv/tyyy__1" target="_blank">Twitch</a>
+        <a href="https://discord.gg/9m8GrtfnzR" target="_blank">Discord</a>
+        <a href="https://throne.com/txxlrr" target="_blank">Wishlist</a>
+      </div>
+    </div>
+
+    <div class="cursor"></div>
+
+    <script>
+      const cursor = document.querySelector(".cursor");
+      document.addEventListener("mousemove", (e) => {
+        cursor.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      });
+
+      const canvas = document.getElementById("bgCanvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const colors = ["#f3764b", "#563014", "#fbead3", "#ee9922"];
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 3 + 1;
+          this.speedX = (Math.random() - 0.5) * 0.7;
+          this.speedY = (Math.random() - 0.5) * 0.7;
+          this.colorIndex = Math.floor(Math.random() * colors.length);
+          this.color = colors[this.colorIndex];
+          this.colorDirection = Math.random() < 0.5 ? 1 : -1;
+          this.trail = [];
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+
+          if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+
+          const dx = mouse.x - this.x;
+          const dy = mouse.y - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            this.x -= dx * 0.007;
+            this.y -= dy * 0.007;
+          }
+
+          // Color cycling
+          this.colorIndex += 0.01 * this.colorDirection;
+          if (this.colorIndex >= colors.length) this.colorIndex = 0;
+          if (this.colorIndex < 0) this.colorIndex = colors.length - 1;
+          const i1 = Math.floor(this.colorIndex);
+          const i2 = (i1 + 1) % colors.length;
+          const f = this.colorIndex - i1;
+          const c1 = colors[i1];
+          const c2 = colors[i2];
+          this.color = this.lerpColor(c1, c2, f);
+
+          // Trail
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > 15) this.trail.shift();
+        }
+        lerpColor(a, b, f) {
+          const c1 = a.match(/\w\w/g).map((h) => parseInt(h, 16));
+          const c2 = b.match(/\w\w/g).map((h) => parseInt(h, 16));
+          const c = c1.map((v, i) => Math.round(v + (c2[i] - v) * f));
+          return `rgb(${c[0]},${c[1]},${c[2]})`;
+        }
+        draw() {
+          // Draw trail
+          ctx.beginPath();
+          for (let i = 0; i < this.trail.length; i++) {
+            ctx.globalAlpha = (i / this.trail.length) * 0.4;
+            ctx.fillStyle = this.color;
+            ctx.arc(
+              this.trail[i].x,
+              this.trail[i].y,
+              this.size,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+          // Draw particle
+          ctx.beginPath();
+          ctx.fillStyle = this.color;
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      let particlesArray = [];
+      for (let i = 0; i < 200; i++) {
+        particlesArray.push(new Particle());
+      }
+
+      let mouse = { x: 0, y: 0 };
+      document.addEventListener("mousemove", (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw connections
+        for (let i = 0; i < particlesArray.length; i++) {
+          let connections = 0; // limit lines per particle
+          for (let j = i + 1; j < particlesArray.length; j++) {
+            const dx = particlesArray[i].x - particlesArray[j].x;
+            const dy = particlesArray[i].y - particlesArray[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 70 && connections < 2) {
+              // only connect if distance <70 and max 2 lines
+              ctx.strokeStyle = particlesArray[i].color;
+              ctx.globalAlpha = 0.9 * (1 - dist / 70); // very subtle
+              ctx.beginPath();
+              ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+              ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+              ctx.stroke();
+              ctx.globalAlpha = 1;
+              connections++;
+            }
+          }
+        }
+
+        particlesArray.forEach((p) => {
+          p.update();
+          p.draw();
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    </script>
+  </body>
+</html>
